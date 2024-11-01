@@ -4,10 +4,9 @@ import streamlit as st
 import openai
 import pandas as pd
 from typing import Optional, Dict
-from openai import OpenAIError  # Importar la excepción correctamente
 
 # -------------------------------
-# 1. Cargar de Forma Segura la Clave API de OpenAI
+# 1. Configurar la Clave API de OpenAI
 # -------------------------------
 
 # Accede al secreto desde la gestión de secretos de Streamlit
@@ -108,7 +107,7 @@ def generate_chatbot_response(product_info: Dict[str, str], user_question: str) 
         )
         # Acceder correctamente al contenido de la respuesta
         return response.choices[0].message["content"].strip()
-    except OpenAIError as e:
+    except openai.error.OpenAIError as e:
         return f"Ocurrió un error al procesar tu solicitud: {e}"
     except Exception as e:
         return f"Ocurrió un error inesperado: {e}"
