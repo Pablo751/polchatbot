@@ -4,7 +4,7 @@ import streamlit as st
 import openai
 import pandas as pd
 from typing import Optional, Dict
-import os
+from openai.error import OpenAIError
 
 # -------------------------------
 # 1. Cargar de Forma Segura la Clave API de OpenAI
@@ -106,8 +106,8 @@ def generate_chatbot_response(product_info: Dict[str, str], user_question: str) 
             max_tokens=500,  # Puedes ajustar esto según tus necesidades
             temperature=0.7  # Puedes ajustar la temperatura para más creatividad o precisión
         )
-        return response['choices'][0]['message']['content'].strip()
-    except openai.error.OpenAIError as e:
+        return response.choices[0].message['content'].strip()
+    except OpenAIError as e:
         return f"Ocurrió un error al procesar tu solicitud: {e}"
     except Exception as e:
         return f"Ocurrió un error inesperado: {e}"
@@ -179,4 +179,13 @@ MAX_HISTORY = 5
 if len(st.session_state['conversation']) > MAX_HISTORY:
     st.session_state['conversation'].pop(0)
 
-# ----------------------------
+# -------------------------------
+# 7. Mostrar el Historial de Conversación
+# -------------------------------
+
+if st.session_state['conversation']:
+    st.header("🗨️ Historial de Conversación")
+    for i, (question, answer) in enumerate(st.session_state['conversation'], 1):
+        st.markdown(f"**Q{i}:** {question}")
+        st.markdown(f"**A{i}:** {answer}")
+        st.markdown("---")
