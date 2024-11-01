@@ -1,16 +1,16 @@
 # chatbot_app.py
 
 import streamlit as st
-import openai
 import pandas as pd
+from openai import OpenAI
 from typing import Optional, Dict
 
 # -------------------------------
-# 1. Configurar la Clave API de OpenAI
+# 1. Configurar el Cliente OpenAI
 # -------------------------------
 
 # Accede al secreto desde la gestión de secretos de Streamlit
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # -------------------------------
 # 2. Configuración de la Aplicación Streamlit
@@ -82,33 +82,29 @@ def generate_chatbot_response(product_info: Dict[str, str], user_question: str) 
         str: La respuesta del chatbot.
     """
     # Construir el prompt
-    prompt = (
-        f"Eres un asistente que ayuda a responder preguntas sobre productos. "
-        f"Usa únicamente la siguiente información para tu respuesta en español.\n\n"
+    system_prompt = "Eres un asistente útil y responde siempre en español."
+    user_prompt = (
         f"**Nombre del Producto**: {product_info['Producto']}\n"
         f"**Descripción**: {product_info['Descripción']}\n"
         f"**Beneficios**: {product_info['Beneficios']}\n"
         f"**Aplicación**: {product_info['Aplicación']}\n"
         f"**Recomendaciones de Uso**: {product_info['Recomendaciones de Uso']}\n\n"
-        f"**Pregunta del Usuario**: {user_question}\n"
-        f"**Respuesta**:"
+        f"**Pregunta del Usuario**: {user_question}"
     )
 
     try:
-        # Llamar a la API de OpenAI con GPT-4o
-        response = openai.ChatCompletion.create(
-            model="gpt-4o-2024-08-06",  # Asegúrate de usar el modelo GPT-4o correcto
+        # Llamar a la API de OpenAI con GPT-4
+        response = client.chat.completions.create(
+            model="gpt-4o-2024-08-06",  # O el modelo que prefieras usar
             messages=[
-                {"role": "system", "content": "Eres un asistente útil y responde siempre en español."},
-                {"role": "user", "content": prompt}
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
             ],
-            max_tokens=500,  # Puedes ajustar esto según tus necesidades
-            temperature=0.7  # Puedes ajustar la temperatura para más creatividad o precisión
+            max_tokens=500,
+            temperature=0.7
         )
         # Acceder correctamente al contenido de la respuesta
-        return response.choices[0].message["content"].strip()
-    except openai.error.OpenAIError as e:
-        return f"Ocurrió un error al procesar tu solicitud: {e}"
+        return response.choices[0].message.content.strip()
     except Exception as e:
         return f"Ocurrió un error inesperado: {e}"
 
@@ -131,7 +127,7 @@ if uploaded_file is not None:
         st.stop()
 else:
     # Si no se carga un archivo, usar la ruta del archivo por defecto
-    default_file_path = 'Matriz_Edificacion.xlsx'  # Asegúrate de que este archivo esté en el mismo directorio que chatbot_app.py
+    default_file_path = 'Matriz_Edificacion.xlsx'
     try:
         product_data = load_product_data(default_file_path)
         st.sidebar.info("Datos de productos por defecto cargados.")
