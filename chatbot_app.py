@@ -4,7 +4,7 @@ import streamlit as st
 import openai
 import pandas as pd
 from typing import Optional, Dict
-from openai.error import OpenAIError
+from openai import OpenAIError
 
 # -------------------------------
 # 1. Cargar de Forma Segura la Clave API de OpenAI
@@ -106,8 +106,9 @@ def generate_chatbot_response(product_info: Dict[str, str], user_question: str) 
             max_tokens=500,  # Puedes ajustar esto según tus necesidades
             temperature=0.7  # Puedes ajustar la temperatura para más creatividad o precisión
         )
+        # Acceder correctamente al contenido de la respuesta
         return response.choices[0].message['content'].strip()
-    except OpenAIError as e:
+    except openai.OpenAIError as e:
         return f"Ocurrió un error al procesar tu solicitud: {e}"
     except Exception as e:
         return f"Ocurrió un error inesperado: {e}"
