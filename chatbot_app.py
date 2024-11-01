@@ -71,10 +71,9 @@ def get_product_info(product_name: str, data: pd.DataFrame) -> Optional[Dict[str
     else:
         return None
 
-@st.cache_data
-def cached_generate_chatbot_response(product_info: Dict[str, str], user_question: str) -> str:
+def generate_chatbot_response(product_info: Dict[str, str], user_question: str) -> str:
     """
-    Generar una respuesta del chatbot usando datos cacheados para minimizar llamadas a la API.
+    Generar una respuesta del chatbot utilizando la API de OpenAI.
 
     Args:
         product_info (Dict[str, str]): Información sobre el producto seleccionado.
@@ -110,6 +109,8 @@ def cached_generate_chatbot_response(product_info: Dict[str, str], user_question
         return response['choices'][0]['message']['content'].strip()
     except openai.error.OpenAIError as e:
         return f"Ocurrió un error al procesar tu solicitud: {e}"
+    except Exception as e:
+        return f"Ocurrió un error inesperado: {e}"
 
 # -------------------------------
 # 5. Cargar los Datos de Productos
@@ -168,7 +169,7 @@ if st.sidebar.button("Obtener Respuesta"):
             if not product_info:
                 st.sidebar.error("Información del producto no encontrada. Por favor, selecciona un producto válido.")
             else:
-                answer = cached_generate_chatbot_response(product_info, user_question)
+                answer = generate_chatbot_response(product_info, user_question)
                 # Agregar al historial de conversación
                 st.session_state['conversation'].append((user_question, answer))
                 st.sidebar.success("¡Respuesta generada!")
@@ -178,13 +179,4 @@ MAX_HISTORY = 5
 if len(st.session_state['conversation']) > MAX_HISTORY:
     st.session_state['conversation'].pop(0)
 
-# -------------------------------
-# 7. Mostrar el Historial de Conversación
-# -------------------------------
-
-if st.session_state['conversation']:
-    st.header("🗨️ Historial de Conversación")
-    for i, (question, answer) in enumerate(st.session_state['conversation'], 1):
-        st.markdown(f"**Q{i}:** {question}")
-        st.markdown(f"**A{i}:** {answer}")
-        st.markdown("---")
+# ----------------------------
